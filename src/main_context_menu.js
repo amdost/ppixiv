@@ -237,7 +237,7 @@ class main_context_menu extends popup_context_menu
             {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                this.handle_zoom_event(e, zoom < 0);
+                this.handle_zoom_event(e, zoom < 0 ? -1 : 1);
             }
         }
     }
@@ -259,13 +259,13 @@ class main_context_menu extends popup_context_menu
 
         e.preventDefault();
         e.stopImmediatePropagation();
-        
-        var down = e.deltaY > 0;
-        this.handle_zoom_event(e, down);
+
+        var factor = helpers.get_value("smooth-wheel") ? e.deltaY / -10 : (e.deltaY > 0 ? -1 : 1);
+        this.handle_zoom_event(e, factor);
     }
     
     // Handle both mousewheel and control-+/- zooming.
-    handle_zoom_event(e, down)
+    handle_zoom_event(e, factor)
     {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -294,7 +294,7 @@ class main_context_menu extends popup_context_menu
             this.refresh();
         }
 
-        this._on_click_viewer.relative_zoom_level += down? -1:+1;
+        this._on_click_viewer.relative_zoom_level += factor;
 
         // As a special case, if we're in 1x zoom from above and we return to 1x relative zoom
         // (eg. the user mousewheeled up and then back down), switch to another zoom mode.

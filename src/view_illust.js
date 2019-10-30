@@ -471,8 +471,20 @@ class view_illust extends view
         if(e.target.closest(".description") != null)
             return;
 
-        var down = e.deltaY > 0;
-        this.move(down);
+        if (helpers.get_value("smooth-wheel")){
+            // use wheel (or trackpad) to move the artwork (similar to drag)
+            this.viewer.on_click_viewer.zoom_pos[0] += e.deltaX * -2;
+            this.viewer.on_click_viewer.zoom_pos[1] += e.deltaY * -2;
+
+            this.viewer.on_click_viewer.reposition();
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        } else {
+            // use wheel to change between artworks
+            var down = e.deltaY > 0;
+            this.move(down);
+        }
     }
 
     get displayed_illust_id()

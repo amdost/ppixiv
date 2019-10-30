@@ -64,6 +64,11 @@ class image_ui
             label: "Invert scrolling while zoomed",
             setting: "invert-scrolling",
         });
+
+        new menu_option_toggle(settings_menu, {
+            label: "Smooth wheel",
+            setting: "smooth-wheel",
+        });
         
         // Firefox's contextmenu behavior is broken, so hide this option.
         if(navigator.userAgent.indexOf("Firefox/") == -1)
