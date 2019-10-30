@@ -642,6 +642,9 @@ class main_controller
         if(a == null)
             return;
 
+        // Allow opening the link in a new tab by holding cmd key or ctl key
+        if(e.metaKey || e.ctrlKey) return;
+
         // If this isn't a #ppixiv URL, let it run normally.
         var url = new URL(a.href, document.href);
         var is_ppixiv_url = helpers.parse_hash(url) != null;

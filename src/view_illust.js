@@ -90,21 +90,10 @@ class view_illust extends view
     //
     // If manga_page isn't null, it's the page to display.
     // If manga_page is -1, show the last page.
-    async show_image(illust_id, manga_page)
+    async show_image(illust_id, manga_page = 0)
     {
         // If we previously set a pending navigation, this navigation overrides it.
         this.cancel_async_navigation();
-
-        // If we were already shown (we're not coming from the thumbnail view), and we're showing
-        // the previous image from the one we were already showing, start at the end instead
-        // of the beginning, so we'll start at the end when browsing backwards.
-        var show_last_page = false;
-        if(this.active && manga_page == null)
-        {
-            var next_illust_id = this.data_source.id_list.get_neighboring_illust_id(illust_id, true);
-            show_last_page = (next_illust_id == this.wanted_illust_id);
-            manga_page = show_last_page? -1:0;
-        }
         
         // Remember that this is the image we want to be displaying.
         this.wanted_illust_id = illust_id;
@@ -510,12 +499,17 @@ class view_illust extends view
         if(e.defaultPrevented)
             return;
         
-        if(e.ctrlKey || e.altKey)
+        if(e.ctrlKey || e.altKey || e.metaKey)
             return;
 
         switch(e.keyCode)
         {
         case 37: // left
+            e.preventDefault();
+            e.stopPropagation();
+
+            this.move(false, false);
+            break;
         case 38: // up
         case 33: // pgup
             e.preventDefault();
@@ -525,6 +519,11 @@ class view_illust extends view
             break;
 
         case 39: // right
+            e.preventDefault();
+            e.stopPropagation();
+
+            this.move(true, false);
+            break;
         case 40: // down
         case 34: // pgdn
             e.preventDefault();
@@ -535,7 +534,7 @@ class view_illust extends view
         }
     }
 
-    async move(down)
+    async move(down, page_change = true)
     {
         // Remember whether we're navigating forwards or backwards, for preloading.
         this.latest_navigation_direction_down = down;
@@ -543,7 +542,7 @@ class view_illust extends view
         this.cancel_async_navigation();
 
         // See if we should change the manga page.
-        if(this.current_illust_data != null && this.current_illust_data.pageCount > 1)
+        if(page_change && this.current_illust_data != null && this.current_illust_data.pageCount > 1)
         {
             var old_page = this.wanted_illust_page;
             var new_page = old_page + (down? +1:-1);
@@ -566,10 +565,11 @@ class view_illust extends view
 
         // Get the next (or previous) illustration after the current one.
         var new_illust_id = this.data_source.id_list.get_neighboring_illust_id(navigate_from_illust_id, down);
+        var options = page_change ? {manga_page: down ? 0 : -1} : {};
         if(new_illust_id != null)
         {
             // Show the new image.
-            main_controller.singleton.show_illust(new_illust_id);
+            main_controller.singleton.show_illust(new_illust_id, options);
             return true;
         }
 

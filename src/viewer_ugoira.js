@@ -173,12 +173,10 @@ class viewer_ugoira extends viewer
 
         case 39: // right arrow
         case 37: // left arrow
+            if(!this.player || !this.player._paused)
+                return;
             e.stopPropagation();
             e.preventDefault();
-            if(!this.player)
-                return;
-
-            this.pause();
             var total_frames = this.player.getFrameCount();
             var current_frame = this.player.getCurrentFrame();
             var next = e.keyCode == 39;
