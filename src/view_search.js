@@ -508,12 +508,6 @@ class view_search extends view
             }
         }
 
-        // Remove next-page-placeholder while we repopulate.  It's a little different from the other
-        // thumbs since it doesn't represent a real entry, so it just complicates the refresh logic.
-        var old_placeholder = ul.querySelector(".next-page-placeholder");
-        if(old_placeholder)
-            ul.removeChild(old_placeholder);
-
         // Add thumbs.
         //
         // Most of the time we're just adding thumbs to the list.  Avoid removing or recreating
@@ -571,15 +565,20 @@ class view_search extends view
             first_element_to_delete = next;
         }
 
+        function create_placeholder(self, page){
+            var entry = self.create_thumb(null, page);
+            entry.classList.add("next-page-placeholder");
+            entry.hidden = self.disable_loading_more_pages;
+            return entry;
+        }
+
         if(this.data_source != null)
         {
             // Add one dummy thumbnail at the end to represent future images.  If we have one page and
             // this scrolls into view, that tells us we're scrolled near the bottom and should try to
             // load page 2.
-            var entry = this.create_thumb(null, max_page+1);
-            entry.classList.add("next-page-placeholder");
-            entry.hidden = this.disable_loading_more_pages;
-            ul.appendChild(entry);
+            if (max_page === 1) ul.insertBefore(create_placeholder(this, 1), ul.firstChild);
+            ul.appendChild(create_placeholder(this, max_page + 1));
         }
 
         if(this.container.offsetWidth == 0)
@@ -629,7 +628,7 @@ class view_search extends view
         var elements = this.get_visible_thumbnails(false);
         for(var element of elements)
         {
-            if(element.dataset.illust_id == null)
+            if(element.classList.contains("next-page-placeholder"))
             {
                 // This is a placeholder image for a page that isn't loaded, so load the page.
                 if(new_pages.indexOf(element.dataset.page) == -1)
@@ -667,11 +666,6 @@ class view_search extends view
                     message_widget.singleton.clear_timer();
                 }
             }
-
-            // We could load more pages, but let's just load one at a time so we don't spam
-            // requests too quickly.  Once this page loads we'll come back here and load
-            // another if needed.
-            break;
         }
 
         if(!thumbnail_data.singleton().are_all_ids_loaded_or_loading(wanted_illust_ids))

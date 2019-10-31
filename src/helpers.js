@@ -1653,6 +1653,7 @@ var helpers = {
     // Otherwise, return the prefix ("user").
     id_type(id)
     {
+        if (id == null) return null;
         let parts = id.split(":");
         if(parts.length < 2)
             return "illust";

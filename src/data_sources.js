@@ -352,8 +352,10 @@ class data_source
             var result = this._load_page_async(page);
             this.loading_pages[page] = result;
             result.finally(() => {
-            console.log("finished loading page", page);
+                console.log("finished loading page", page);
                 delete this.loading_pages[page];
+                var placeholders = document.getElementsByClassName("next-page-placeholder");
+                for (var e of placeholders) if (e.dataset.page == page) e.remove();
             });
         }
 
@@ -2125,6 +2127,7 @@ class data_source_bookmarks_merged extends data_source_bookmarks_base
         {
             // We're past the end.
             console.log("page", page, "beyond", max_page, rest);
+            this.bookmark_illust_ids[is_private][page] = [];
             return;
         }
 
