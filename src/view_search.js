@@ -718,6 +718,7 @@ class view_search extends view
     set_visible_thumbs()
     {
         // Make a list of IDs that we're assigning.
+        var changed = false;
         var elements = this.get_visible_thumbnails();
         var illust_ids = [];
         for(var element of elements)
@@ -746,6 +747,10 @@ class view_search extends view
                 var info = thumbnail_data.singleton().get_one_thumbnail_info(illust_id);
                 if(info == null)
                     continue;
+                if (info.filtered) {
+                    element.remove();
+                    changed = true;
+                }
             }
             
             // Leave it alone if it's already been loaded.
@@ -871,7 +876,8 @@ class view_search extends view
             } else {
                 label.hidden = true;
             }
-        }        
+        }
+        if (changed) this.onscroll(); // some displayed items are removed, refresh again
     }
 
     // Refresh the thumbnail for illust_id.

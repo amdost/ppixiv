@@ -111,7 +111,20 @@ class tag_search_box_widget
         // This can be sent to either the search page search box or the one in the
         // navigation dropdown.  Figure out which one we're on.
         var search_box = e.target.closest(".search-box");
-        var tags = this.input_element.value.trim();
+        var content = this.input_element.value.trim();
+        if (content.length > 0)
+        content.startsWith("filter:") ? this.start_filter(content) : this.start_search(content);
+    }
+
+    start_filter(content){
+        var filter = content.substring(7);
+        if (filter.length == 0) filter = "true";
+        else helpers.add_recent_search_tag(content);
+        helpers.set_value("search-filter", filter);
+        location.reload();
+    }
+
+    start_search(tags){
         if(tags.length == 0)
             return;
 
@@ -125,7 +138,7 @@ class tag_search_box_widget
             e.target.blur();
             view_hidden_listener.send_viewhidden(e.target);
         }
-        
+
         // Run the search.
         helpers.set_page_url(page_manager.singleton().get_url_for_tag_search(tags), true);
     }

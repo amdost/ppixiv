@@ -148,6 +148,7 @@ class thumbnail_data
             ["illustTitle", "title"],
             ["userName", "userName"],
             ["illustType", "illustType"],
+            ['bookmarkCount', 'bookmarkCount'],
 //            ["user_profile_img", "profileImageUrl"],
         ];
         return this._thumbnail_info_map_following;
@@ -234,8 +235,8 @@ class thumbnail_data
         if(thumb_result.error)
             return;
 
-        var thumbnail_info_map = this.thumbnail_info_map_illust_list;
         var urls = [];
+        var filterProperties = []; // reuse the same set of filter properties
         for(var thumb_info of thumb_result)
         {
             // Ignore entries with "isAdContainer".  These aren't search results at all and just contain
@@ -243,13 +244,14 @@ class thumbnail_data
             if(thumb_info.isAdContainer)
                 continue;
 
+            var thumbnail_info_map = this.thumbnail_info_map_illust_list;
+            var remapped_thumb_info = { };
+
             if(source == "normal")
             {
                 // The data is already in the format we want.  Just check that all keys we
                 // expect exist, and remove any keys we don't know about so we don't use them
                 // accidentally.
-                var thumbnail_info_map = this.thumbnail_info_map_illust_list;
-                var remapped_thumb_info = { };
                 for(var pair of thumbnail_info_map)
                 {
                     var key = pair[1];
@@ -279,12 +281,11 @@ class thumbnail_data
                     source == "illust_new" || source == "search")
             {
                 // Get the mapping for this mode.
-                var thumbnail_info_map = 
+                thumbnail_info_map =
                     source == "illust_list"? this.thumbnail_info_map_illust_list:
                     source == "following" || source == "illust_new" || source == "search"?  this.thumbnail_info_map_following:
                     this.thumbnail_info_map_ranking;
 
-                var remapped_thumb_info = { };
                 for(var pair of thumbnail_info_map)
                 {
                     var from_key = pair[0];
@@ -379,6 +380,8 @@ class thumbnail_data
                     remapped_thumb_info[key] = parseInt(remapped_thumb_info[key]);
             }
 
+            remapped_thumb_info.filtered = !this.filter(remapped_thumb_info, thumb_info, filterProperties);
+
             thumb_info = remapped_thumb_info;
 
             // Store the data.
@@ -392,9 +395,66 @@ class thumbnail_data
                 urls.push(thumb_info.url);
         }
 
+        // delete global variables for each filter property
+        // otherwise those properties will not be populated again in the next page
+        for (var name of filterProperties) delete window[name];
+
         // Broadcast that we have new thumbnail data available.
         window.dispatchEvent(new Event("thumbnailsLoaded"));
     };
+
+    filter(info, additional_info, filterProperties){
+
+        var log = console.log; // early develop stage using console.log to display messages
+
+        function get_options(){
+            var result = [];
+            for (var option in info) if (info.hasOwnProperty(option)) result.push(option);
+            return result;
+        }
+
+        function get_additional_options(){
+            var result = [];
+            for (var option in additional_info) if (additional_info.hasOwnProperty(option)) result.push(option);
+            return result;
+        }
+
+        // Can display options at runtime using: filter:options()
+        function options(){
+            log(get_options());
+        }
+
+        // Can display options at runtime using: filter:more_options()
+        function more_options(){
+            log(get_additional_options());
+        }
+
+        //create global variables for each filter property
+        for (var name of filterProperties){
+            var val = undefined;
+            if (additional_info.hasOwnProperty(name)) val = additional_info[name];
+            if (info.hasOwnProperty(name)) val = info[name];
+            if (val === undefined) log(name + " is not defined");
+            window[name] = val;
+        }
+
+        var result = undefined;
+        try{
+            result = eval(helpers.get_value("search-filter", "true"));
+        } catch (e) {
+            var define_error = " is not defined";
+            if (e.message.endsWith(define_error)){
+                // property is not defined, add it to filterProperties to define it in the next recursion
+                var name = e.message.substring(0, e.message.length - define_error.length);
+                filterProperties.push(name);
+                result = this.filter(info, additional_info, filterProperties);
+            } else {
+                log("Search filter faild: " + e.message);
+                console.error(e)
+            }
+        }
+        return !((result === false) || (result === "false")); // anything that is not false or "false" are true
+    }
 
     // Store thumbnail info.
     add_thumbnail_info(thumb_info)
