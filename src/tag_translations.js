@@ -38,11 +38,13 @@ class tag_translations
 
             // Remove empty translation values.
             let translation = {};
-            for(let lang of Object.keys(tag.translation))
-            {
-                let value = tag.translation[lang];
-                if(value != "")
-                    translation[lang] = value;
+            if (tag.translation){
+                for(let lang of Object.keys(tag.translation))
+                {
+                    let value = tag.translation[lang];
+                    if(value != "")
+                        translation[lang] = value;
+                }
             }
 
             // Store the tag data that we care about.  We don't need to store post-specific info

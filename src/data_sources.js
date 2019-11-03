@@ -1099,10 +1099,11 @@ class data_source_rankings extends data_source
         }
 
         // Register this as thumbnail data.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.contents, "rankings");
-        
+        //thumbnail_data.singleton().loaded_thumbnail_info(result.contents, "rankings");
+        var ids = await thumbnail_data.singleton().load_info_and_filter(result.contents);
+
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     };
 
     get estimated_items_per_page() { return 50; }
@@ -2078,10 +2079,11 @@ class data_source_bookmarks extends data_source_bookmarks_base
 
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+        // thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+        var ids = await thumbnail_data.singleton().load_info_and_filter(result.body.works);
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 };
 
@@ -2146,10 +2148,6 @@ class data_source_bookmarks_merged extends data_source_bookmarks_base
         for(var illust_data of result.body.works)
             illust_ids.push(illust_data.id);
 
-        // This request returns all of the thumbnail data we need.  Forward it to
-        // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
-
         // If there are no results, remember that this is the last page, so we don't
         // make more requests for this type.
         if(illust_ids.length == 0)
@@ -2161,8 +2159,13 @@ class data_source_bookmarks_merged extends data_source_bookmarks_base
             console.log("max page", this.max_page_per_type[is_private]);
         }
 
+        // This request returns all of the thumbnail data we need.  Forward it to
+        // thumbnail_data so we don't need to look it up.
+        // thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+        var ids = await thumbnail_data.singleton().load_info_and_filter(result.body.works);
+
         // Store the IDs.  We don't register them here.
-        this.bookmark_illust_ids[is_private][page] = illust_ids;
+        this.bookmark_illust_ids[is_private][page] = ids;
     }
 }
 
@@ -2233,10 +2236,11 @@ class data_source_new_illust extends data_source
         
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.illusts, "illust_new");
+        // thumbnail_data.singleton().loaded_thumbnail_info(result.body.illusts, "illust_new");
+        var ids = thumbnail_data.singleton().load_info_and_filter(result.body.illusts);
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
     
     refresh_thumbnail_ui(container)
@@ -2430,14 +2434,15 @@ class data_source_search extends data_source
         let illusts = body.illustManga.data;
 
         // Populate thumbnail data with this data.
-        thumbnail_data.singleton().loaded_thumbnail_info(illusts, "search");
+        //thumbnail_data.singleton().loaded_thumbnail_info(illusts, "search");
+        var ids = thumbnail_data.singleton().load_info_and_filter(body.illustManga.data);
 
         var illust_ids = [];
         for(let illust of illusts)
             illust_ids.push(illust.illustId);
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 
     get page_title()
@@ -2625,10 +2630,11 @@ class data_source_follows extends data_source
         
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(illusts, "normal");
+        // thumbnail_data.singleton().loaded_thumbnail_info(illusts, "normal");
+        var ids = thumbnail_data.singleton().load_info_and_filter(illust);
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 
     refresh_thumbnail_ui(container, thumbnail_view)

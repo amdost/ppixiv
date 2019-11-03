@@ -15,6 +15,7 @@ class thumbnail_data
 
         // IDs that we're currently requesting:
         this.loading_ids = {};
+        this.load_info_and_filter = this.load_info_and_filter.bind(this);
     };
 
     // Return the singleton, creating it if needed.
@@ -106,7 +107,8 @@ class thumbnail_data
             exclude_muted_illusts: 1,
         });
 
-        this.loaded_thumbnail_info(result, "illust_list");
+        this.load_info_and_filter(result);
+        //this.loaded_thumbnail_info(result, "illust_list");
     }
 
     // Get the mapping from /ajax/user/id/illusts/bookmarks to illust_list.php's keys.
@@ -403,36 +405,72 @@ class thumbnail_data
         window.dispatchEvent(new Event("thumbnailsLoaded"));
     };
 
-    filter(info, additional_info, filterProperties){
+    async load_info_and_filter(thumb_result, isArt = true){
+        if(thumb_result.error)
+            return;
+        var promises = [];
+        for(var thumb_info of thumb_result)
+        {
+            // Ignore entries with "isAdContainer".  These aren't search results at all and just contain
+            // stuff we're not interested in.
+            if(thumb_info.isAdContainer)
+                continue;
 
+            var id = thumb_info.illust_id;
+            if (id == null) id = thumb_info.illustId;
+            if (id == null) throw "Parse id failed";
+
+            var get_info = async function(info, id){
+                if (isArt){
+                    var illust_result = await helpers.get_request("/ajax/illust/" + id, {});
+                    if(illust_result == null || illust_result.error)
+                        return null;
+                    info = illust_result.body;
+                }
+                return info;
+            };
+
+            promises.push(get_info(thumb_info, id));
+        }
+
+        var infos = await Promise.all(promises);
+        var filterProperties = []; // reuse the same set of filter properties
+        var ids = [];
+        for (var info of infos){
+            delete this.loading_ids[info.id];
+
+            if(!this.filter(info, filterProperties)) continue; //filtered
+
+            ids.push(info.id);
+
+            info.url = info.urls.small;
+            info.tags = info.tags.tags;
+
+            // Store the data.
+            this.add_thumbnail_info(info);
+        }
+
+        // delete global variables for each filter property
+        // otherwise those properties will not be populated again in the next page
+        for (var name of filterProperties) delete window[name];
+
+        // Broadcast that we have new thumbnail data available.
+        window.dispatchEvent(new Event("thumbnailsLoaded"));
+        return ids;
+    }
+
+    filter(info, filterProperties){
+        var result = this.parse(info, filterProperties);
+        return !((result === false) || (result === "false")); // anything that is not false or "false" are true
+    }
+
+    // properties will be dynamically generated whenever a variable is undefined in the parse string
+    parse(info, properties){
         var log = console.log; // early develop stage using console.log to display messages
 
-        function get_options(){
-            var result = [];
-            for (var option in info) if (info.hasOwnProperty(option)) result.push(option);
-            return result;
-        }
-
-        function get_additional_options(){
-            var result = [];
-            for (var option in additional_info) if (additional_info.hasOwnProperty(option)) result.push(option);
-            return result;
-        }
-
-        // Can display options at runtime using: filter:options()
-        function options(){
-            log(get_options());
-        }
-
-        // Can display options at runtime using: filter:more_options()
-        function more_options(){
-            log(get_additional_options());
-        }
-
         //create global variables for each filter property
-        for (var name of filterProperties){
+        for (var name of properties){
             var val = undefined;
-            if (additional_info.hasOwnProperty(name)) val = additional_info[name];
             if (info.hasOwnProperty(name)) val = info[name];
             if (val === undefined) log(name + " is not defined");
             window[name] = val;
@@ -444,16 +482,15 @@ class thumbnail_data
         } catch (e) {
             var define_error = " is not defined";
             if (e.message.endsWith(define_error)){
-                // property is not defined, add it to filterProperties to define it in the next recursion
+                // property is not defined, add it to properties to define it in the next recursion
                 var name = e.message.substring(0, e.message.length - define_error.length);
-                filterProperties.push(name);
-                result = this.filter(info, additional_info, filterProperties);
+                properties.push(name);
+                result = this.filter(info, properties);
             } else {
                 log("Search filter faild: " + e.message);
                 console.error(e)
             }
         }
-        return !((result === false) || (result === "false")); // anything that is not false or "false" are true
     }
 
     // Store thumbnail info.
@@ -467,7 +504,7 @@ class thumbnail_data
     {
         if(muting.singleton.is_muted_user_id(thumb_info.illust_user_id))
             return true;
-        if(muting.singleton.any_tag_muted(thumb_info.tags))
+        if(muting.singleton.any_tag_muted(thumb_info.tags.tags))
             return true;
         return false;
     }

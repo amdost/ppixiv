@@ -1060,7 +1060,7 @@ var helpers = {
     {
         var tags = helpers.get_tags_from_illust_data(illust_data);
         for(var tag of tags)
-            if(tag.indexOf("ドット") != -1)
+            if(tag.tag.indexOf("ドット") != -1)
                 return true;
 
         return false;
