@@ -261,6 +261,16 @@ class view_illust extends view
             });
         }
 
+        var previouse_id = this.data_source.id_list.get_neighboring_illust_id(illust_id, false);
+        var next_id = this.data_source.id_list.get_neighboring_illust_id(illust_id, true);
+        image_data.singleton().get_image_info(previouse_id).then((info)=>{
+            helpers.decode_image(info.urls.original);
+        });
+        image_data.singleton().get_image_info(next_id).then((info)=>{
+            helpers.decode_image(info.urls.original);
+        });
+
+
         // Refresh the UI now that we have a new viewer.
         this.refresh_ui();
     }
