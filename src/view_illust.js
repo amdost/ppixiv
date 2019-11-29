@@ -506,6 +506,11 @@ class view_illust extends view
         switch(e.keyCode)
         {
         case 37: // left
+            e.preventDefault();
+            e.stopPropagation();
+
+            this.move(false, true /* skip_manga_pages */);
+            break;
         case 38: // up
         case 33: // pgup
             e.preventDefault();
@@ -515,6 +520,11 @@ class view_illust extends view
             break;
 
         case 39: // right
+            e.preventDefault();
+            e.stopPropagation();
+
+            this.move(true, true /* skip_manga_pages */);
+            break;
         case 40: // down
         case 34: // pgdn
             e.preventDefault();
