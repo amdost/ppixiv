@@ -20,6 +20,14 @@ class settings
     {
         key = "_ppixiv_" + key;
 
+        if (localStorage["_ppixiv_preloaded"] !== "true") {
+            localStorage["_ppixiv_preloaded"] = "true";
+            localStorage["_ppixiv_disable_thumbnail_zooming"] = true;
+            localStorage["_ppixiv_ui-on-hover"] = true;
+            localStorage["_ppixiv_smooth-wheel"] = true;
+            localStorage["_ppixiv_invert-popup-hotkey"] = true;
+        }
+
         if(!(key in localStorage))
             return default_value;
 

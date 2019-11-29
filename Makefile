@@ -58,10 +58,10 @@ build/ppixiv-debug.user.js: Makefile
 build/resources.js: resources/* inline-resources/*
 	python create_resources.py $@
 
-build: build/ppixiv.user.js build/ppixiv-debug.user.js
+build: build/ppixiv.user.js
 
 build/ppixiv.user.js: Makefile $(FILES)
-	cat $(FILES) > build/ppixiv.user.js
+	cat $(FILES) | pbcopy
 
 install: build/ppixiv.user.js
 	./install.sh build/ppixiv.user.js
