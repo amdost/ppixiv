@@ -500,11 +500,11 @@ class avatar_widget
         if(e.keyCode == 70) // f
         {
             // f to follow publically, F to follow privately, ^F to unfollow.
+            if(this.user_data == null || e.metaKey)
+                return;
+
             e.stopPropagation();
             e.preventDefault();
-
-            if(this.user_data == null)
-                return;
 
             if(e.ctrlKey)
             {
