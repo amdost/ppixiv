@@ -11,6 +11,7 @@ class view_illust extends view
         this.refresh_ui = this.refresh_ui.bind(this);
         this.data_source_updated = this.data_source_updated.bind(this);
 
+        this.down_progress = 0;
         this.current_illust_id = -1;
         this.latest_navigation_direction_down = true;
         this.container = container;
@@ -472,8 +473,35 @@ class view_illust extends view
         if(e.target.closest(".description") != null)
             return;
 
-        var down = e.deltaY > 0;
-        this.move(down, e.shiftKey /* skip_manga_pages */);
+        if (helpers.get_value("smooth-wheel")){
+            if (!this.viewer.on_click_viewer.locked_zoom) {
+                // use wheel (or trackpad) to change pages
+                if (this.last_wheel_event == null) this.last_wheel_event = e;
+                var deltaTime = e.timeStamp - this.last_wheel_event.timeStamp;
+                if (deltaTime < 20){
+                    this.down_progress += e.deltaY;
+                } else {
+                    if (deltaTime < 30 && Math.abs(this.down_progress) > 50){
+                        this.move(this.down_progress > 0);
+                    }
+                    this.down_progress = 0;
+                }
+                this.last_wheel_event = e;
+            } else {
+                // use wheel (or trackpad) to move the artwork (similar to drag)
+                this.viewer.on_click_viewer.zoom_pos[0] += e.deltaX * -2;
+                this.viewer.on_click_viewer.zoom_pos[1] += e.deltaY * -2;
+    
+                this.viewer.on_click_viewer.reposition();
+    
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        } else {
+            // use wheel to change between artworks
+            var down = e.deltaY > 0;
+            this.move(down);
+        }
     }
 
     get displayed_illust_id()

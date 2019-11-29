@@ -58,6 +58,11 @@ class menu_option
             label: "Invert scrolling while zoomed",
             setting: "invert-scrolling",
         });
+
+        new menu_option_toggle(container, {
+            label: "Smooth wheel",
+            setting: "smooth-wheel",
+        });
  
         new menu_option_toggle_light_theme(container, {
             label: "Light mode",
