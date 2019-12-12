@@ -1045,7 +1045,7 @@ li.thumbnail-box[data-pending] a img.thumb {
 }
 
 .thumbnail-box .thumb {
-    object-fit: cover;
+    object-fit: scale-down;
 
     /* Show the top-center of the thunbnail.  This generally makes more sense
      * than cropping the center. */
