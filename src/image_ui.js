@@ -92,6 +92,40 @@ class image_ui
         if(e.defaultPrevented)
             return;
 
+        if (e.key === 'h')
+        {
+            e.stopPropagation();
+            e.preventDefault();
+
+            var illust_data = this.illust_data;
+            if(illust_data == null)
+                return;
+
+            if(illust_data.bookmarkData == null) {
+                message_widget.singleton.show("Image isn't bookmarked");
+                return;
+            }
+
+            var hidden_pages = eval("[" + illust_data.bookmarkData.comment + "]");
+
+            var toggle_hidden_page = function(page_code){
+                if(e.ctrlKey && hidden_pages.includes(page_code)) {
+                    hidden_pages.splice(hidden_pages.indexOf(page_code), 1);
+                }
+                if (!e.ctrlKey && !hidden_pages.includes(page_code)) {
+                    hidden_pages.push(page_code);
+                }
+            };
+
+            toggle_hidden_page(this.displayed_page);
+            if (this.displayed_page === illust_data.pageCount - 1) toggle_hidden_page(-1);
+            actions.bookmark_add(illust_data, {
+                comment: "" + hidden_pages
+            });
+
+            return;
+        }
+
         if(e.keyCode == 66) // b
         {
             // b to bookmark publically, B to bookmark privately, ^B to remove a bookmark.

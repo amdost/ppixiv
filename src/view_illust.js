@@ -265,9 +265,11 @@ class view_illust extends view
         var next_id = this.data_source.id_list.get_neighboring_illust_id(illust_id, true);
         image_data.singleton().get_image_info(previouse_id).then((info)=>{
             helpers.decode_image(info.urls.original);
+            image_data.singleton().load_bookmark_details(info);
         });
         image_data.singleton().get_image_info(next_id).then((info)=>{
             helpers.decode_image(info.urls.original);
+            image_data.singleton().load_bookmark_details(info);
         });
 
 
@@ -547,28 +549,28 @@ class view_illust extends view
             e.preventDefault();
             e.stopPropagation();
 
-            this.move(false, true /* skip_manga_pages */);
+            this.move(false, true);
             break;
         case 38: // up
         case 33: // pgup
             e.preventDefault();
             e.stopPropagation();
 
-            this.move(false, e.shiftKey /* skip_manga_pages */);
+            this.move(false, false, e.shiftKey);
             break;
 
         case 39: // right
             e.preventDefault();
             e.stopPropagation();
 
-            this.move(true, true /* skip_manga_pages */);
+            this.move(true, true);
             break;
         case 40: // down
         case 34: // pgdn
             e.preventDefault();
             e.stopPropagation();
 
-            this.move(true, e.shiftKey /* skip_manga_pages */);
+            this.move(true, false, e.shiftKey);
             break;
         }
     }
@@ -578,7 +580,7 @@ class view_illust extends view
     // If skip_manga_pages is true, jump past any manga pages in the current illustration.  If
     // this is true and we're navigating backwards, we'll also jump to the first manga page
     // instead of the last.
-    async move(down, skip_manga_pages)
+    async move(down, skip_manga_pages, show_hidden=false)
     {
         // Remember whether we're navigating forwards or backwards, for preloading.
         this.latest_navigation_direction_down = down;
@@ -593,7 +595,15 @@ class view_illust extends view
             new_page = Math.max(0, Math.min(this.current_illust_data.pageCount - 1, new_page));
             if(new_page != old_page)
             {
-                main_controller.singleton.show_illust(this.current_illust_id, {
+                this.fallback_illust_id = this.wanted_illust_id;
+                this.fallback_page = new_page;
+                var bookmark = this.current_illust_data.bookmarkData;
+                var hidden_pages = bookmark === null ? [] : eval("[" + bookmark.comment + "]");
+                if (!show_hidden && hidden_pages.includes(new_page)) {
+                    this.wanted_illust_page = new_page;
+                    return this.move(down, skip_manga_pages, show_hidden);
+                }
+                main_controller.singleton.show_illust(this.wanted_illust_id, {
                     manga_page: new_page,
                 });
                 return;
@@ -612,10 +622,29 @@ class view_illust extends view
         if(new_illust_id != null)
         {
             // Show the new image.
+            var new_page = down || skip_manga_pages? 0:-1;
+            this.fallback_illust_id = new_illust_id;
+            this.fallback_page = new_page;
+            this.current_illust_data = await image_data.singleton().get_image_info(new_illust_id);
+            await image_data.singleton().load_bookmark_details(this.current_illust_data);
+            var bookmark = this.current_illust_data.bookmarkData;
+            var hidden_pages = bookmark === null ? [] : eval("[" + bookmark.comment + "]");
+            if (!show_hidden && hidden_pages.includes(new_page)) {
+                if (new_page == -1) new_page = this.current_illust_data.pageCount - 1;
+                this.wanted_illust_page = new_page;
+                this.wanted_illust_id = new_illust_id;
+                return this.move(skip_manga_pages || down, false, show_hidden);
+            }
             main_controller.singleton.show_illust(new_illust_id, {
-                manga_page: down || skip_manga_pages? 0:-1,
+                manga_page: new_page,
             });
             return true;
+        }
+
+        if (this.fallback_illust_id != null && this.fallback_page != null){
+            main_controller.singleton.show_illust(this.fallback_illust_id, {
+                manga_page: this.fallback_page,
+            });
         }
 
         // That page isn't loaded.  Try to load it.
