@@ -319,7 +319,7 @@ class main_context_menu extends popup_context_menu
         // Otherwise, if you zoom up and then back down, the zoom level is left at 1x, so click
         // zooming seems to be broken.  We don't know what the old zoom setting was to restore it,
         // so we just switch to fill zoom.
-        if(this._on_click_viewer.relative_zoom_level == 0 && this._on_click_viewer.zoom_level == 4)
+        if(this._on_click_viewer.relative_zoom_level <= 0 && this._on_click_viewer.zoom_level == 4)
         {
             this._on_click_viewer.zoom_level = 0;
             this._on_click_viewer.locked_zoom = false;
