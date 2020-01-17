@@ -28,7 +28,7 @@ class on_click_viewer
         this._zoom_level = helpers.get_value("zoom-level", 1);
 
         // Restore the most recent zoom mode.  We assume that there's only one of these on screen.
-        this.locked_zoom = helpers.get_value("zoom-mode") != "normal";
+        this.locked_zoom = false;
         this._relative_zoom_level = helpers.get_value("zoom-level-relative") || 0;
     }
 

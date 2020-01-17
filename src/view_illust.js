@@ -505,7 +505,22 @@ class view_illust extends view
                 this.viewer.on_click_viewer.zoom_pos[1] += e.deltaY * -2;
     
                 this.viewer.on_click_viewer.reposition();
-    
+                var img = this.viewer.on_click_viewer.img;
+                var screenWidthHf = img.parentNode.offsetWidth / 2;
+                var screenHeightHf = img.parentNode.offsetHeight / 2;
+                if (img.x < screenWidthHf - img.width && e.deltaX > 0) {
+                    this.viewer.on_click_viewer.locked_zoom = false;
+                    window.history.forward();
+                } else if (img.x > screenWidthHf && e.deltaX < 0) {
+                    this.viewer.on_click_viewer.locked_zoom = false;
+                    window.history.back();
+                } else if (img.y < screenHeightHf - img.height) {
+                    this.viewer.on_click_viewer.locked_zoom = false;
+                    this.move(true);
+                } else if (img.y > screenHeightHf) {
+                    this.viewer.on_click_viewer.locked_zoom = false;
+                    this.move(false);
+                }
                 e.preventDefault();
                 e.stopImmediatePropagation();
             }
