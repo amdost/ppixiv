@@ -7,6 +7,7 @@
 
     <!-- main_ui: -->
     <div class="view view-illust-container">
+        <div class=tag-list style="position: absolute; right: 0; color: white; z-index: 1000"></div>
         <div class=image-container data-context-menu-target></div>
         <div class=preview-container data-context-menu-target></div>
 
@@ -881,8 +882,11 @@
             display: flex;
             cursor: pointer;
         }
+            .popup-bookmark-tag-entry {
+                background-color: black;
+            }
                    .popup-bookmark-tag-entry.active {
-            background-color: #004;
+            background-color: #00c;
         }
         body.light .popup-bookmark-tag-entry.active {
             background-color: #00c;

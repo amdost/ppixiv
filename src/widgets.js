@@ -1158,12 +1158,12 @@ class bookmark_tag_list_widget extends illust_widget
             this.visible = false;
 
         if(illust_data == null || !this.visible)
-            return;
+            var bookmark_tags = document.querySelector(".tag-list");
 
         // Create a temporary entry to show loading while we load bookmark details.
         var entry = document.createElement("span");
         bookmark_tags.appendChild(entry);
-        entry.innerText = "Loading...";
+        entry.innerText = "...";
 
         // If the tag list is open, populate bookmark details to get bookmark tags.
         // If the image isn't bookmarked this won't do anything.
@@ -1197,6 +1197,7 @@ class bookmark_tag_list_widget extends illust_widget
             if(shown_tags.indexOf(tag) == -1)
                 shown_tags.push(tag);
 
+        shown_tags.sort();
         console.log("Showing tags:", shown_tags);
 
         for(var i = 0; i < shown_tags.length; ++i)
