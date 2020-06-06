@@ -90,7 +90,7 @@ class message_widget
         this.container.classList.remove("centered");
         this.timer = setTimeout(function() {
             this.container.classList.remove("show");
-        }.bind(this), 3000);
+        }.bind(this), 1000);
     }
 
     clear_timer()
