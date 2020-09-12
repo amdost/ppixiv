@@ -8,6 +8,7 @@ class thumbnail_data
     constructor()
     {
         this.loaded_thumbnail_info = this.loaded_thumbnail_info.bind(this);
+        this.load_info = this.load_info.bind(this);
 
         // Cached data:
         this.thumbnail_data = { };
@@ -215,6 +216,14 @@ class thumbnail_data
 
     }
 
+    async load_info(thumb_result, source){
+        var filter = helpers.get_value("search-filter");
+        return (filter == null || filter === "" || filter === "true") ?
+        // return true ?
+            this.loaded_thumbnail_info(thumb_result, source) :
+            await this.load_info_and_filter(thumb_result);
+    }
+
     // This is called when we have new thumbnail data available.  thumb_result is
     // an array of thumbnail items.
     //
@@ -240,6 +249,7 @@ class thumbnail_data
 
         var thumbnail_info_map = this.thumbnail_info_map_illust_list;
         var urls = [];
+        var ids = []
         for(var thumb_info of thumb_result)
         {
             // Ignore entries with "isAdContainer".  These aren't search results at all and just contain
@@ -381,6 +391,7 @@ class thumbnail_data
             this.add_thumbnail_info(thumb_info);
 
             var illust_id = thumb_info.id;
+            ids.push(illust_id)
             delete this.loading_ids[illust_id];
 
             // Don't preload muted images.
@@ -390,6 +401,104 @@ class thumbnail_data
 
         // Broadcast that we have new thumbnail data available.
         window.dispatchEvent(new Event("thumbnailsLoaded"));
+        return ids
+    };
+
+    async load_info_and_filter(thumb_result, source) {
+        if(thumb_result.error) return;
+        var promises = [];
+
+        var get_info = async function(id){
+            var illust_result = await helpers.get_request("/ajax/illust/" + id, {});
+            if(illust_result == null || illust_result.error) return null;
+            return illust_result.body;
+        };
+
+        for(var thumb_info of thumb_result) {
+            // Ignore entries with "isAdContainer".  These aren't search results at all and just contain
+            // stuff we're not interested in.
+            if(thumb_info.isAdContainer)  continue;
+            var id = thumb_info.illust_id;
+            if (id == null) id = thumb_info.illustId;
+            if (id == null) throw "Parse id failed";
+
+            promises.push(get_info(id));
+        }
+        var infos = await Promise.all(promises);
+
+        var filterProperties = [];
+
+        function parse(info, properties){
+            var log = console.log;
+            var listAll = () => { log(info) };
+
+            //create global variables for each filter property
+            for (var name of properties){
+                var val = undefined;
+                if (info.hasOwnProperty(name)) val = info[name];
+                if (val === undefined) {
+                    log(name + " is not defined");
+                    return null
+                }
+                window[name] = val;
+            }
+
+            var result = undefined;
+            try{
+                result = eval(helpers.get_value("search-filter", "true"));
+            } catch(e){
+                var define_error = " is not defined";
+                if (e.message.endsWith(define_error)){
+                    // property is not defined, add it to properties to define it in the next recursion
+                    var name = e.message.substring(0, e.message.length - define_error.length);
+                    properties.push(name);
+                    result = parse(info, properties);
+                } else {
+                    log("Search filter faild: " + e.message);
+                    console.error(e)
+                }
+            }
+
+            for (var name of properties) delete window[name];
+            return result;
+        }
+
+        function filter() {
+            var result = parse(info, filterProperties);
+            return !((result === false) || (result === "false")); // anything that is not false or "false" are true
+        }
+
+        function infoTransform(info) {
+            info.url = info.urls.small;
+            info.tagDetails = info.tags;
+            info.id = info.illustId;
+            info.profileImageUrl = "https://s.pximg.net/common/images/no_profile_s.png";
+            info.tags = [];
+            for (var t of info.tagDetails.tags) {
+                info.tags.push(t.tag)
+            }
+        }
+
+        var ids = [];
+        var backup;
+        for (var info of infos){
+            delete this.loading_ids[info.id];
+            infoTransform(info);
+            backup = info;
+            if(!filter(info, filterProperties)) continue; //filtered
+            ids.push(info.id);
+            this.add_thumbnail_info(info);
+        }
+
+        if (ids.length === 0 && backup != null){
+            backup.url = "https://s.pximg.net/common/images/no_profile_s.png";
+            ids.push(backup.id);
+            this.add_thumbnail_info(backup);
+        }
+
+        // Broadcast that we have new thumbnail data available.
+        window.dispatchEvent(new Event("thumbnailsLoaded"));
+        return ids
     };
 
     // Store thumbnail info.

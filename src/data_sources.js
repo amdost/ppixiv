@@ -1185,24 +1185,11 @@ class data_source_rankings extends data_source
             this.prev_date = result.prev_date;
         if(this.next_date == null && result.next_date)
             this.next_date = result.next_date;
-    
-        // This returns a struct of data that's like the thumbnails data response,
-        // but it's not quite the same.
-        var illust_ids = [];
-        for(var item of result.contents)
-        {
-            // Most APIs return IDs as strings, but this one returns them as ints.
-            // Convert them to strings.
-            var illust_id = "" + item.illust_id;
-            var user_id = "" + item.user_id;
-            illust_ids.push(illust_id);
-        }
 
         // Register this as thumbnail data.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.contents, "rankings");
-        
+        let ids = await thumbnail_data.singleton().load_info(result.contents, "rankings");
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     };
 
     get estimated_items_per_page() { return 50; }
@@ -1390,7 +1377,7 @@ class data_source_from_page extends data_source
 
         if(this.original_doc != null && this.is_same_page(url, this.original_url))
         {
-            this.finished_loading_illust(page, this.original_doc);
+            await this.finished_loading_illust(page, this.original_doc);
             return true;
         }
 
@@ -1409,15 +1396,15 @@ class data_source_from_page extends data_source
         console.log("Loading:", url.toString());
 
         var doc = await helpers.load_data_in_iframe(url.toString());
-        this.finished_loading_illust(page, doc);
+        await this.finished_loading_illust(page, doc);
     };
 
     get estimated_items_per_page() { return this.items_per_page; }
 
     // We finished loading a page.  Parse it and register the results.
-    finished_loading_illust(page, doc)
+    async finished_loading_illust(page, doc)
     {
-        var illust_ids = this.parse_document(doc);
+        var illust_ids = await this.parse_document(doc);
         if(illust_ids == null)
         {
             // The most common case of there being no data in the document is loading
@@ -1443,7 +1430,7 @@ class data_source_from_page extends data_source
     }
 
     // Parse the loaded document and return the illust_ids.
-    parse_document(doc)
+    async parse_document(doc)
     {
         throw "Not implemented";
     }
@@ -1583,17 +1570,13 @@ class data_source_artist extends data_source
                 item.userName = this.user_info.name;
                 item.profileImageUrl = this.user_info.imageBig;
             }
-
-            var illust_ids = [];
-            for(var illust_data of result.body.works)
-                illust_ids.push(illust_data.id);
             
             // This request returns all of the thumbnail data we need.  Forward it to
             // thumbnail_data so we don't need to look it up.
-            thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+            let ids = await thumbnail_data.singleton().load_info(result.body.works, "normal");
 
             // Register the new page of data.
-            this.add_page(page, illust_ids);
+            this.add_page(page, ids);
         }
     }
     
@@ -1790,7 +1773,7 @@ class data_source_current_illust extends data_source_fake_pagination
     async load_all_results()
     {
         if(this.original_doc != null)
-            return this.load_all_results_from(this.original_doc);
+            return await this.load_all_results_from(this.original_doc);
 
         var url = new unsafeWindow.URL(this.original_url);
 
@@ -1800,12 +1783,12 @@ class data_source_current_illust extends data_source_fake_pagination
         console.log("Loading:", url.toString());
 
         var doc = await helpers.load_data_in_iframe(url.toString());
-        return this.load_all_results_from(doc);
+        return await this.load_all_results_from(doc);
     };
 
-    load_all_results_from(doc)
+    async load_all_results_from(doc)
     {
-        var illust_ids = this.parse_document(doc);
+        var illust_ids = await this.parse_document(doc);
         if(illust_ids != null)
             return illust_ids;
 
@@ -1838,7 +1821,7 @@ class data_source_current_illust extends data_source_fake_pagination
         return preload;
     }
 
-    parse_document(doc)
+    async parse_document(doc)
     {
         let preload = this.get_preload_data(doc);
         if(preload == null)
@@ -2290,16 +2273,12 @@ class data_source_bookmarks extends data_source_bookmarks_base
         var result = await helpers.get_request(url, data);
         result.body.works = data_source_bookmarks_base.filter_deleted_images(result.body.works);
 
-        var illust_ids = [];
-        for(var illust_data of result.body.works)
-            illust_ids.push(illust_data.id);
-
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+        let ids = await thumbnail_data.singleton().load_info(result.body.works, "normal");
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 };
 
@@ -2361,17 +2340,13 @@ class data_source_bookmarks_merged extends data_source_bookmarks_base
             return parseInt(rhs.bookmarkData.id) - parseInt(lhs.bookmarkData.id);
         });
 
-        var illust_ids = [];
-        for(var illust_data of result.body.works)
-            illust_ids.push(illust_data.id);
-
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.works, "normal");
+        let ids = await thumbnail_data.singleton().load_info(result.body.works, "normal");
 
         // If there are no results, remember that this is the last page, so we don't
         // make more requests for this type.
-        if(illust_ids.length == 0)
+        if(ids.length == 0)
         {
             if(this.max_page_per_type[is_private] == -1)
                 this.max_page_per_type[is_private] = page;
@@ -2381,7 +2356,7 @@ class data_source_bookmarks_merged extends data_source_bookmarks_base
         }
 
         // Store the IDs.  We don't register them here.
-        this.bookmark_illust_ids[is_private][page] = illust_ids;
+        this.bookmark_illust_ids[is_private][page] = ids;
     }
 }
 
@@ -2439,23 +2414,19 @@ class data_source_new_illust extends data_source
             r18: r18,
             lastId: this.last_id,
         });
-
-        var illust_ids = [];
-        for(var illust_data of result.body.illusts)
-            illust_ids.push(illust_data.id);
-
-        if(illust_ids.length > 0)
-        {
-            this.last_id = illust_ids[illust_ids.length-1];
-            this.last_id_page++;
-        }
         
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(result.body.illusts, "illust_new");
+        let ids = await thumbnail_data.singleton().load_info(result.body.illusts, "illust_new");
+
+        if(ids.length > 0)
+        {
+            this.last_id = ids[ids.length-1];
+            this.last_id_page++;
+        }
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
     
     refresh_thumbnail_ui(container)
@@ -2498,7 +2469,7 @@ class data_source_bookmarks_new_illust extends data_source_from_page
     }
 
     // Parse the loaded document and return the illust_ids.
-    parse_document(doc)
+    async parse_document(doc)
     {
         this.bookmark_tags = [];
         for(var element of doc.querySelectorAll(".menu-items a[href*='bookmark_new_illust.php?tag'] span.icon-text"))
@@ -2508,13 +2479,7 @@ class data_source_bookmarks_new_illust extends data_source_from_page
         var items = JSON.parse(element.dataset.items);
 
         // Populate thumbnail data with this data.
-        thumbnail_data.singleton().loaded_thumbnail_info(items, "following");
-
-        var illust_ids = [];
-        for(var illust of items)
-            illust_ids.push(illust.illustId);
-
-        return illust_ids;
+        return await thumbnail_data.singleton().load_info(items, "following");
     }
 
     get page_title()
@@ -2759,14 +2724,9 @@ class data_source_search extends data_source
         illusts = illusts.data;
 
         // Populate thumbnail data with this data.
-        thumbnail_data.singleton().loaded_thumbnail_info(illusts, "normal");
-
-        var illust_ids = [];
-        for(let illust of illusts)
-            illust_ids.push(illust.id);
-
+        let ids = await thumbnail_data.singleton().load_info(illusts, "normal");
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 
     get page_title()
@@ -3048,10 +3008,10 @@ class data_source_follows extends data_source
         
         // This request returns all of the thumbnail data we need.  Forward it to
         // thumbnail_data so we don't need to look it up.
-        thumbnail_data.singleton().loaded_thumbnail_info(illusts, "normal");
+        let ids = await thumbnail_data.singleton().load_info(illusts, "normal");
 
         // Register the new page of data.
-        this.add_page(page, illust_ids);
+        this.add_page(page, ids);
     }
 
     refresh_thumbnail_ui(container, thumbnail_view)

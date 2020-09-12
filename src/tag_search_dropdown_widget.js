@@ -111,10 +111,20 @@ class tag_search_box_widget
         // This can be sent to either the search page search box or the one in the
         // navigation dropdown.  Figure out which one we're on.
         var search_box = e.target.closest(".search-box");
-        var tags = this.input_element.value.trim();
-        if(tags.length == 0)
-            return;
+        var content = this.input_element.value.trim();
+        if (content.length === 0) return
+        content.startsWith("f:") ? this.start_filter(content) : this.start_search(content);
+    }
 
+    start_filter(content){
+        var filter = content.substring(2);
+        if (filter.length === 0) filter = "true";
+        else helpers.add_recent_search_tag(content);
+        helpers.set_value("search-filter", filter);
+        location.reload();
+    }
+
+    start_search(tags){
         // Add this tag to the recent search list.
         helpers.add_recent_search_tag(tags);
 
