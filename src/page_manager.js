@@ -273,8 +273,11 @@ class page_manager
         url = helpers.get_url_without_language(url);
 
         let type = helpers.get_page_type_from_url(url);
-        if(type == "tags")
-        {
+        if (tags.startsWith("f:")) {
+            var hash_params = helpers.get_hash_args(url);
+            hash_params.set("filter", tags.substring(2));
+            helpers.set_hash_args(url, hash_params);
+        } else if(type == "tags") {
             // If we're on search already, just change the search tag, so we preserve other settings.
             // /tags/tag/artworks -> /tag/new tag/artworks
             let parts = url.pathname.split("/");

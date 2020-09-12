@@ -217,9 +217,8 @@ class thumbnail_data
     }
 
     async load_info(thumb_result, source){
-        var filter = helpers.get_value("search-filter");
+        var filter = helpers.get_hash_args(document.location).get( "filter");
         return (filter == null || filter === "" || filter === "true") ?
-        // return true ?
             this.loaded_thumbnail_info(thumb_result, source) :
             await this.load_info_and_filter(thumb_result);
     }
@@ -445,7 +444,7 @@ class thumbnail_data
 
             var result = undefined;
             try{
-                result = eval(helpers.get_value("search-filter", "true"));
+                result = eval(helpers.get_hash_args(document.location).get( "filter"));
             } catch(e){
                 var define_error = " is not defined";
                 if (e.message.endsWith(define_error)){

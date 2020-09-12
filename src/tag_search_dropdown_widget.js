@@ -120,7 +120,9 @@ class tag_search_box_widget
         var filter = content.substring(2);
         if (filter.length === 0) filter = "true";
         else helpers.add_recent_search_tag(content);
-        helpers.set_value("search-filter", filter);
+        var hash_params = helpers.get_hash_args(document.location);
+        hash_params.set("filter", filter);
+        helpers.set_hash_args(document.location, hash_params);
         location.reload();
     }
 
