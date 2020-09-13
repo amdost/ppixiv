@@ -732,6 +732,9 @@ class main_controller
             });
             
             return;
+        } else if (url.pathname.startsWith("/users/")) {
+            window.open(url, "_blank");
+            return;
         }
 
         // Navigate to the URL in-page.
