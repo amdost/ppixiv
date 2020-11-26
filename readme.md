@@ -59,3 +59,7 @@ These pages are supported:
 Portions under MIT/BSD license as listed in source.  All other code is in the
 public domain.
 
+# Filter examples
+f:listall() // list all properties of image
+f:bookmarkCount>8000 or f:bmc>8000
+f:taghas("tree")

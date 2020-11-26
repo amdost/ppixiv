@@ -218,6 +218,7 @@ class thumbnail_data
 
     async load_info(thumb_result, source){
         var filter = helpers.get_hash_args(document.location).get( "filter");
+        return await this.load_info_and_filter(thumb_result);
         return (filter == null || filter === "" || filter === "true") ?
             this.loaded_thumbnail_info(thumb_result, source) :
             await this.load_info_and_filter(thumb_result);
@@ -408,29 +409,36 @@ class thumbnail_data
         var promises = [];
 
         var get_info = async function(id){
-            var illust_result = await helpers.get_request("/ajax/illust/" + id, {});
-            if(illust_result == null || illust_result.error) return null;
-            return illust_result.body;
+            try{
+                var illust_result = await helpers.get_request("/ajax/illust/" + id, {});
+                if(illust_result == null || illust_result.error) return null;
+                return illust_result.body;
+            } catch (e){
+                return null;
+            }
         };
 
         for(var thumb_info of thumb_result) {
             // Ignore entries with "isAdContainer".  These aren't search results at all and just contain
             // stuff we're not interested in.
-            if(thumb_info.isAdContainer)  continue;
-            var id = thumb_info.illust_id;
+            if (thumb_info.isAdContainer) continue;
+            var id = null
+            if (typeof thumb_info == "number") id = thumb_info;
+            if (typeof thumb_info == "string") id = thumb_info;
+            if (id == null) id = thumb_info.illust_id;
             if (id == null) id = thumb_info.illustId;
+            if (id == null) id = thumb_info.id;
             if (id == null) throw "Parse id failed";
 
             promises.push(get_info(id));
         }
         var infos = await Promise.all(promises);
+        infos = infos.filter(n => n);
 
+        var filterStr = helpers.get_hash_args(document.location).get( "filter");
         var filterProperties = [];
 
         function parse(info, properties){
-            var log = console.log;
-            var listAll = () => { log(info) };
-
             //create global variables for each filter property
             for (var name of properties){
                 var val = undefined;
@@ -442,9 +450,16 @@ class thumbnail_data
                 window[name] = val;
             }
 
+            var log = console.log;
+            var listAll = () => { log(info) };
+            var listall = listAll;
+            var tagHas = (t) => { 
+                return tags.filter(c => c.includes(t)).length > 0 }
+            var taghas = tagHas
+
             var result = undefined;
             try{
-                result = eval(helpers.get_hash_args(document.location).get( "filter"));
+                result = eval(filterStr);
             } catch(e){
                 var define_error = " is not defined";
                 if (e.message.endsWith(define_error)){
@@ -476,6 +491,11 @@ class thumbnail_data
             for (var t of info.tagDetails.tags) {
                 info.tags.push(t.tag)
             }
+            // convenient mapping for filter
+            info.bmc = info.bookmarkCount;
+            info.pg = info.pageCount;
+            info.h = info.height;
+            info.w = info.width;
         }
 
         var ids = [];
@@ -484,7 +504,8 @@ class thumbnail_data
             delete this.loading_ids[info.id];
             infoTransform(info);
             backup = info;
-            if(!filter(info, filterProperties)) continue; //filtered
+            if((filterStr != null && filterStr !== "" && filterStr !== "true")
+                && !filter(info, filterProperties)) continue; //filtered
             ids.push(info.id);
             this.add_thumbnail_info(info);
         }

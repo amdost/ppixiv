@@ -771,6 +771,7 @@ class data_source_fake_pagination extends data_source
         if(this.pages == null)
         {
             var illust_ids = await this.load_all_results();
+            illust_ids = await thumbnail_data.singleton().load_info(illust_ids);
             this.pages = paginate_illust_ids(illust_ids, this.estimated_items_per_page);
         }
 
@@ -1536,6 +1537,7 @@ class data_source_artist extends data_source
             if(this.pages == null)
             {
                 var illust_ids = await this.load_all_results();
+                illust_ids = await thumbnail_data.singleton().load_info(illust_ids);
                 this.pages = paginate_illust_ids(illust_ids, this.estimated_items_per_page);
             }
 
