@@ -1025,7 +1025,7 @@ class view_search extends view
                 // We can use this if we want a "show anyway' UI.
                 thumb.dataset.mutedUrl = url;
             }
-            else
+            else if (!element.dataset.loaded)
             {
                 thumb.src = url;
 
@@ -1061,6 +1061,28 @@ class view_search extends view
                     pageCountBox.hidden = false;
                     pageCountBox.href = link.href + "?view=manga";
                     element.querySelector(".page-count-box .page-count").textContent = info.pageCount;
+                    function showAll(base, illust_id, o){
+                        base.style.background = "#444";
+                        base.style.borderRadius = "10px";
+                        image_data.singleton().get_image_info(illust_id).then(illust_info => {
+                            var from = base.querySelector(".thumb").parentNode;
+                            var nextNode = from.nextElementSibling;
+                            from.style.margin = "20px";
+                            from.dataset.pageIdx = 0;
+                            for(var mpage = 1; mpage < illust_info.mangaPages.length; ++mpage) {
+                                var box = from.cloneNode(true)
+                                box.style.margin = "20px";
+                                box.dataset.pageIdx = mpage;
+                                box.querySelector(".thumb").src = illust_info.mangaPages[mpage].urls.small;
+                                box.href = "/artworks/" + illust_id + "#ppixiv?page=" + (mpage + 1);
+                                from.parentNode.insertBefore(box, nextNode);
+                            }
+                        })
+                    }
+                    if (!element.dataset.loaded && helpers.get_value("expand-manga")){
+                        element.dataset.loaded = true;
+                        showAll(element, illust_id, this);
+                    }
                 }
 
             }
@@ -1217,16 +1239,23 @@ class view_search extends view
 
     // Scroll to illust_id if it's available.  This is called when we display the thumbnail view
     // after coming from an illustration.
-    scroll_to_illust_id(illust_id)
+    scroll_to_illust_id(illust_id, manga_page)
     {
         var thumb = this.container.querySelector("li[data-illust_id='" + illust_id + "']");
         if(thumb == null)
             return;
+        var offsetTop = thumb.offsetTop
+
+        var manga = thumb.querySelector('[data-page-idx="' + manga_page + '"]')
+        if (manga) {
+            thumb = manga;
+            offsetTop += thumb.offsetTop;
+        }
 
         // If the item isn't visible, center it.
         var scroll_pos = this.container.scrollTop;
-        if(thumb.offsetTop < scroll_pos || thumb.offsetTop + thumb.offsetHeight > scroll_pos + this.container.offsetHeight)
-            this.container.scrollTop = thumb.offsetTop + thumb.offsetHeight/2 - this.container.offsetHeight/2;
+        if(offsetTop < scroll_pos || offsetTop + thumb.offsetHeight > scroll_pos + this.container.offsetHeight)
+            this.container.scrollTop = offsetTop + thumb.offsetHeight/2 - this.container.offsetHeight/2;
     };
 
     pulse_thumbnail(illust_id)

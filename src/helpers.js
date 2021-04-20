@@ -25,7 +25,9 @@ class settings
             localStorage["_ppixiv_disable_thumbnail_zooming"] = true;
             localStorage["_ppixiv_ui-on-hover"] = true;
             localStorage["_ppixiv_smooth-wheel"] = true;
+            localStorage["_ppixiv_expand-manga"] = true;
             localStorage["_ppixiv_invert-popup-hotkey"] = true;
+            localStorage["_ppixiv_disable_thumbnail_panning"] = true;
         }
 
         if(!(key in localStorage))

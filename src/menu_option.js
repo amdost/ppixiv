@@ -63,6 +63,12 @@ class menu_option
             label: "Smooth wheel",
             setting: "smooth-wheel",
         });
+
+        new menu_option_toggle(container, {
+            label: "Expand Manga",
+            setting: "expand-manga",
+            ontoggle: () => location.reload(),
+        });
  
         new menu_option_toggle_light_theme(container, {
             label: "Light mode",
@@ -155,6 +161,7 @@ class menu_option_toggle extends menu_option
         e.stopPropagation();
 
         this.value = !this.value;
+        if (this.options.ontoggle) this.options.ontoggle();
     }
 }
 

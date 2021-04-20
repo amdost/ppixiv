@@ -916,6 +916,7 @@ li.thumbnail-load-previous > .load-previous-page-link:hover {
 li.thumbnail-box {
     display: inline-block;
     padding: 1em;
+    margin: 5px;
 }
 /* Hide pending images (they haven't been set up yet). */
 li.thumbnail-box[data-pending] {
@@ -926,7 +927,7 @@ li.thumbnail-box .thumbnail-inner {
 }
 
 li.thumbnail-box a.thumbnail-link {
-    display: block;
+    display: inline-block;
 
     border-radius: 4px;
     overflow: hidden;
