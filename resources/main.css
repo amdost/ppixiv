@@ -881,6 +881,7 @@ body.ui-on-hover .top-ui-box + .top-ui-box-padding
 }
 
 .view-search-container ul.thumbnails {
+    padding: 120px;
     margin: 0;
     margin: 0 auto; /* center */
 }
@@ -924,6 +925,8 @@ li.thumbnail-box[data-pending] {
 }
 li.thumbnail-box .thumbnail-inner {
     position: relative;
+    max-height: 600pt;
+    overflow: scroll;
 }
 
 li.thumbnail-box a.thumbnail-link {

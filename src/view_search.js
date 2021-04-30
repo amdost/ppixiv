@@ -1244,18 +1244,14 @@ class view_search extends view
         var thumb = this.container.querySelector("li[data-illust_id='" + illust_id + "']");
         if(thumb == null)
             return;
-        var offsetTop = thumb.offsetTop
 
+        var scroll_pos = this.container.scrollTop;
+        if(thumb.offsetTop < scroll_pos || thumb.offsetTop + thumb.offsetHeight > scroll_pos + this.container.offsetHeight)
+            this.container.scrollTop = thumb.offsetTop + thumb.offsetHeight/2 - this.container.offsetHeight/2;
         var manga = thumb.querySelector('[data-page-idx="' + manga_page + '"]')
         if (manga) {
-            thumb = manga;
-            offsetTop += thumb.offsetTop;
+            thumb.scrollTop = manga.offsetTop + manga.offsetHeight/2 - this.container.offsetHeight/2;
         }
-
-        // If the item isn't visible, center it.
-        var scroll_pos = this.container.scrollTop;
-        if(offsetTop < scroll_pos || offsetTop + thumb.offsetHeight > scroll_pos + this.container.offsetHeight)
-            this.container.scrollTop = offsetTop + thumb.offsetHeight/2 - this.container.offsetHeight/2;
     };
 
     pulse_thumbnail(illust_id)
