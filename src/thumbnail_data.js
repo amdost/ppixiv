@@ -217,11 +217,7 @@ class thumbnail_data
     }
 
     async load_info(thumb_result, source){
-        var filter = helpers.get_hash_args(document.location).get( "filter");
         return await this.load_info_and_filter(thumb_result);
-        return (filter == null || filter === "" || filter === "true") ?
-            this.loaded_thumbnail_info(thumb_result, source) :
-            await this.load_info_and_filter(thumb_result);
     }
 
     // This is called when we have new thumbnail data available.  thumb_result is
@@ -412,7 +408,10 @@ class thumbnail_data
             try{
                 var illust_result = await helpers.get_request("/ajax/illust/" + id, {});
                 if(illust_result == null || illust_result.error) return null;
-                return illust_result.body;
+                var data = illust_result.body
+                data.userData = await image_data.singleton().get_user_info_full(data.userId);
+                data.followed = data.userData.isFollowed;
+                return data;
             } catch (e){
                 return null;
             }
