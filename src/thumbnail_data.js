@@ -438,6 +438,13 @@ class thumbnail_data
         var filterProperties = [];
 
         function parse(info, properties){
+            var log = console.log;
+            var listAll = () => { log(info) };
+            var listall = listAll;
+            var tagHas = (t) => { 
+                return tags.filter(c => c.includes(t)).length > 0 }
+            var taghas = tagHas
+
             //create global variables for each filter property
             for (var name of properties){
                 var val = undefined;
@@ -448,13 +455,6 @@ class thumbnail_data
                 }
                 window[name] = val;
             }
-
-            var log = console.log;
-            var listAll = () => { log(info) };
-            var listall = listAll;
-            var tagHas = (t) => { 
-                return tags.filter(c => c.includes(t)).length > 0 }
-            var taghas = tagHas
 
             var result = undefined;
             try{
