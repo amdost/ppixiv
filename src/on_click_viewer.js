@@ -79,11 +79,11 @@ class on_click_viewer
         this.event_target = target;
         window.addEventListener("blur", this.window_blur);
         window.addEventListener("resize", this.onresize, true);
-        target.addEventListener("pointerdown", this.pointerdown);
-        target.addEventListener("pointerup", this.pointerup);
-        target.addEventListener("pointercancel", this.pointerup);
-        target.addEventListener("dragstart", this.block_event);
-        target.addEventListener("selectstart", this.block_event);
+        // target.addEventListener("pointerdown", this.pointerdown);
+        // target.addEventListener("pointerup", this.pointerup);
+        // target.addEventListener("pointercancel", this.pointerup);
+        // target.addEventListener("dragstart", this.block_event);
+        // target.addEventListener("selectstart", this.block_event);
 
         target.style.userSelect = "none";
         target.style.MozUserSelect = "none";
@@ -95,11 +95,11 @@ class on_click_viewer
         {
             var target = this.event_target;
             this.event_target = null;
-            target.removeEventListener("pointerdown", this.pointerdown);
-            target.removeEventListener("pointerup", this.pointerup);
-            target.removeEventListener("pointercancel", this.pointerup);
-            target.removeEventListener("dragstart", this.block_event);
-            target.removeEventListener("selectstart", this.block_event);
+            // target.removeEventListener("pointerdown", this.pointerdown);
+            // target.removeEventListener("pointerup", this.pointerup);
+            // target.removeEventListener("pointercancel", this.pointerup);
+            // target.removeEventListener("dragstart", this.block_event);
+            // target.removeEventListener("selectstart", this.block_event);
             target.style.userSelect = "none";
             target.style.MozUserSelect = "";
         }
