@@ -613,7 +613,7 @@ class view_illust extends view
                 this.fallback_illust_id = this.wanted_illust_id;
                 this.fallback_page = new_page;
                 var bookmark = this.current_illust_data.bookmarkData;
-                var hidden_pages = bookmark === null ? [] : eval("[" + bookmark.comment + "]");
+                var hidden_pages = bookmark === null ? [] : helpers.range_decode(bookmark.comment);
                 if (!show_hidden && hidden_pages.includes(new_page)) {
                     this.wanted_illust_page = new_page;
                     return this.move(down, skip_manga_pages, show_hidden);
@@ -643,7 +643,7 @@ class view_illust extends view
             this.current_illust_data = await image_data.singleton().get_image_info(new_illust_id);
             await image_data.singleton().load_bookmark_details(this.current_illust_data);
             var bookmark = this.current_illust_data.bookmarkData;
-            var hidden_pages = bookmark === null ? [] : eval("[" + bookmark.comment + "]");
+            var hidden_pages = bookmark === null ? [] : helpers.range_decode(bookmark.comment);
             if (!show_hidden && hidden_pages.includes(new_page)) {
                 if (new_page == -1) new_page = this.current_illust_data.pageCount - 1;
                 this.wanted_illust_page = new_page;

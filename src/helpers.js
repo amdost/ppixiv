@@ -1837,6 +1837,51 @@ var helpers = {
             return id;
         else
             return parts[1];
+    },
+
+    range_decode(str)
+    {
+        console.log(str);
+        let result = [];
+        let last = null;
+        let ranging = false;
+        for (let c of str.split(",")){
+            let parsed = parseInt(c);
+            if (c === ""){
+            } else if (c === "-" && last != null && !ranging){
+                ranging = true;
+            } else if (!isNaN(parsed)){
+                last = ranging ? last + 1 : parsed;
+                for (let i = last; i <= parsed; i++) result.push(i);
+                if (ranging) last = null;
+                ranging = false;
+            } else {
+                alert("error decoding range " + str)
+                return result;
+            }
+        }
+        return result;
+    },
+
+    range_encode(lst)
+    {
+        lst.sort()
+        let result = "";
+        let last = null;
+        let ranging = false;
+        for (let c of lst){
+            if (last != null && c - last == 1){
+                last = c;
+                ranging = true;
+            } else {
+                if (ranging) result += ",-," + last;
+                ranging = false;
+                result += "," + c;
+                last = c;
+            }
+        }
+        if (ranging) result += ",-," + last;
+        return result;
     }
 };
 

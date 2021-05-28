@@ -106,21 +106,22 @@ class image_ui
                 return;
             }
 
-            var hidden_pages = eval("[" + illust_data.bookmarkData.comment + "]");
+            var hidden_pages = helpers.range_decode(illust_data.bookmarkData.comment)
 
             var toggle_hidden_page = function(page_code){
                 if(e.ctrlKey && hidden_pages.includes(page_code)) {
-                    hidden_pages.splice(hidden_pages.indexOf(page_code), 1);
+                    hidden_pages = hidden_pages.filter(i => i != page_code);
                 }
                 if (!e.ctrlKey && !hidden_pages.includes(page_code)) {
                     hidden_pages.push(page_code);
                 }
+                if (e.metaKey) hidden_pages = [-1,...Array(illust_data.pageCount).keys()];
             };
 
             toggle_hidden_page(this.displayed_page);
             if (this.displayed_page === illust_data.pageCount - 1) toggle_hidden_page(-1);
             actions.bookmark_add(illust_data, {
-                comment: "" + hidden_pages
+                comment: helpers.range_encode(hidden_pages)
             });
 
             return;
